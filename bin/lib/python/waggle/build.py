@@ -536,9 +536,8 @@ def detach_loop_devices():
             time.sleep(3)
 
 
-
 def detect_odroid_model():
-    odroid_model_raw = get_output('cat /proc/cpuinfo | grep Hardware | grep -o "[^ ]*$"').rstrip().decode()
+    odroid_model_raw = os.getenv("ARCH",get_output('cat /proc/cpuinfo | grep Hardware | grep -o "[^ ]*$"').rstrip().decode())
     print("Detected device: %s" % odroid_model_raw)
 
     odroid_model = ''
