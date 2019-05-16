@@ -44,8 +44,8 @@ fi
 
 
 dd if=/dev/zero bs=1M count=1024 >> $image_file
-#available_device=$(losetup -f)
-available_device="/dev/loop8183"
+available_device=$(losetup -f)
+#available_device="/dev/loop8183"
 set +e
 losetup -d $available_device
 set -e
