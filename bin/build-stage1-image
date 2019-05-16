@@ -1,11 +1,8 @@
 #!/bin/bash
 
-function arch(){
-  local out=$(cat /proc/cpuinfo | grep Hardware | cut -d ":" -f 2)
-  echo $out
-}
+. arch-image
 
-stage1_dir="/root/images/stage1"
+stage1_dir="$IMAGE_ROOT/stage1"
 
 set -e
 set -x

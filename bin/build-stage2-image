@@ -2,14 +2,10 @@
 set -e
 set -x
 
-function arch(){
-  local out=$(cat /proc/cpuinfo | grep Hardware | cut -d ":" -f 2)
-  echo $out
-}
-
+. arch-image
 
 current_dir=`pwd`
-stage2_dir="/root/images/stage2"
+stage2_dir="$IMAGE_ROOT/stage2"
 
 cd $stage2_dir
 

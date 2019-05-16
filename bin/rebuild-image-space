@@ -2,20 +2,16 @@
 set -e
 set -x
 
-function arch(){
-  local out=$(cat /proc/cpuinfo | grep Hardware | cut -d ":" -f 2)
-  echo $out
-}
+. arch-image
 
 if [ $(arch) == "ODROIDC" ] || [ $(arch) == "ODROID-XU4" ]; then
     echo "Odroid build-system detected, starting process..."
-    cd /root/
-    if [ -d "images" ]; then mv images images_$(date +%s); fi
-    mkdir -p images
-    mkdir -p images/stage0
-    mkdir -p images/stage1
-    mkdir -p images/stage2
-    mkdir -p images/stage3
+    if [ -d $IMAGE_ROOT ]; then mv $(IMAGE_ROOT) $(IMAGE_ROOT)_$(date +%s); fi
+    mkdir -p $IMAGE_ROOT
+    mkdir -p $IMAGE_ROOT/stage0
+    mkdir -p $IMAGE_ROOT/stage1
+    mkdir -p $IMAGE_ROOT/stage2
+    mkdir -p $IMAGE_ROOT/stage3
 else
     echo "This machine is neither a C1+ nor a XU4. Please follow steps from \
       https://github.com/waggle-sensor/waggle_image/tree/master/build_image_docs to build images."

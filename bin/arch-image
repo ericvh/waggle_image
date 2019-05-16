@@ -1,0 +1,16 @@
+#!/bin/bash
+# Generic defaults allowing for overrides
+# allow override of ARCH with environment variable
+set -e
+
+function findarch(){
+  local out=$(cat /proc/cpuinfo | grep Hardware | cut -d ":" -f 2)
+  echo $out
+}
+
+function arch(){
+    echo ${ARCH:-$(findarch)}
+}
+
+IMAGE_ROOT=${DEST:-/root/images}
+IMAGE_DIST=${DIST:-$(lsb_release -r | tr "\t" " " | sed "s/\ //g"  | cut -d ":" -f 2)}
