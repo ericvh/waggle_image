@@ -282,6 +282,7 @@ def upload_image(build_directory, base_image):
 
 
 def main(argv):
+    docker = False
     usage_message = "Usage: build-stage2-image [OPTIONS] <uuid>\n"\
                     "  build the image with UUID <uuid>\n"\
                     "OPTIONS\n"\
@@ -289,12 +290,14 @@ def main(argv):
                     "show this usage message\n"\
                     "  -b |--build-dir=<build_dir>    "\
                     "work on the disk image in the <build_dir> directory\n"\
+                    "  -d |--docker                    "\
+                    "work in docker mode (no loopbacks or chroots)\n"\
                     ""
     try:
         opts, args = getopt.getopt(
             argv,
-            "b:",
-            ["help", "build-dir="])
+            "b:d",
+            ["help", "build-dir=", "docker"])
     except getopt.GetoptError as ge:
         print("\nError:", str(ge))
         print(usage_message)
@@ -308,6 +311,8 @@ def main(argv):
             sys.exit(0)
         elif opt in ('-b', '--build-dir'):
             build_directory = arg
+        elif opt in ('-d', '--docker'):
+            docker = True
         else:
             print("\n" + usage_message + "\n")
             sys.exit(2)
@@ -333,34 +338,31 @@ def main(argv):
 
     change_partition_uuid_script = waggle_image_directory + 'scripts/change-partition-uuid'   #'/usr/lib/waggle/waggle_image/change_partition_uuid.sh'
 
-    mount_point = "/mnt/newimage"
 
-    base_image = get_base_image_filename(base)
-
-    setup_mount_point(mount_point)
-
-    os.chdir(build_directory)
-
-    mount_new_image_local_uncompressed(base_image, mount_point, base)
+    if docker:
+        mount_point = "/"
+    else:
+        mount_point = "/mnt/newimage"
+        setup_mount_point(mount_point)
+        base_image = get_base_image_filename(base)
+        os.chdir(build_directory)
+        mount_new_image_local_uncompressed(base_image, mount_point, base)
 
     stage_image_build_script(waggle_image_directory, mount_point, branch)
-
-
     build_image(mount_point, build_config.get_base_dependencies(base=base))
 
     generate_report(build_directory, mount_point, base_image)
 
-    unmount_image(mount_point)
-
-    attach_loop_devices(base_image, 0)
-
-    print("check boot partition")
-    check_boot_partition()
-
-    print("filesystem check on /dev/loop0p2 after chroot")
-    check_data_partition()
-
-    detach_loop_devices()
+    if docker:
+        print("done")
+    else:
+        unmount_image(mount_point)
+        attach_loop_devices(base_image, 0)
+        print("check boot partition")
+        check_boot_partition()
+        print("filesystem check on /dev/loop0p2 after chroot")
+        check_data_partition()
+        detach_loop_devices()
 
     #compress_image(base_image)
 

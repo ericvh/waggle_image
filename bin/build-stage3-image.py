@@ -47,6 +47,8 @@ def print_usage():
                     "  -u|--upload                     "\
                     "upload the compressed image to the Waggle\n"\
                     "                                  downloads page (implies -c)\n"\
+                    "  -D|--docker                     "\
+                    "docker build mode\n"\
                     ""
     print(usage_message)
 
@@ -329,9 +331,9 @@ def deploy_to_disk(waggle_image, target_device, deployment):
 def main(argv):
   try:
     opts, args = getopt.getopt(
-      argv, "b:nev:r:d:t:cu",
+      argv, "b:nev:r:d:t:cu:D",
       ["help", "build-dir=", "node-controller", "edge-processor", "version=", "revision=", "deployment=",
-       "target=", "compress", "upload"])
+       "target=", "compress", "upload", "docker"])
   except getopt.GetoptError as ge:
     print("\nError:", str(ge))
     print_usage()
@@ -346,12 +348,16 @@ def main(argv):
   target_device=None
   compress = False
   upload = False
+  docker = False
+
   for opt, arg in opts:
     if opt == '--help':
       print_usage()
       sys.exit(0)
     elif opt in ('-b', '--build-dir'):
       build_directory = arg
+    elif opt in ('-D', '--docker'):
+      docker = True
     elif opt in ('-n', '--node-controller'):
       node_controller = True
     elif opt in ('-e', '--edge-processor'):
@@ -420,17 +426,19 @@ def main(argv):
 
   change_partition_uuid_script = waggle_image_directory + 'scripts/change-partition-uuid'   #'/usr/lib/waggle/waggle_image/change_partition_uuid.sh'
 
-  mount_point = "/mnt/newimage"
+  if docker:
+    mount_point = "/"
+  else:
+    mount_point = "/mnt/newimage"
+    #waggle_image = get_waggle_image_filename(build, node_element)
+    waggle_image = get_base_image_filename(base)
 
-  #waggle_image = get_waggle_image_filename(build, node_element)
-  waggle_image = get_base_image_filename(base)
+    setup_mount_point(mount_point)
 
-  setup_mount_point(mount_point)
+    os.chdir(build_directory)
 
-  os.chdir(build_directory)
-
-  #mount_new_image(build, node_element, mount_point)
-  mount_new_image_from_uncompressed(build, node_element, mount_point)
+    #mount_new_image(build, node_element, mount_point)
+    mount_new_image_from_uncompressed(build, node_element, mount_point)
 
   stage_image_build_script(waggle_image_directory, mount_point)
 
@@ -445,21 +453,24 @@ def main(argv):
     deploy(deployment, mount_point)
     unmount_image(mount_point)
 
-  attach_loop_devices(waggle_image, 0)
+  if docker:
+    print("done")
+  else:
+    attach_loop_devices(waggle_image, 0)
 
-  print("check boot partition")
-  check_boot_partition()
+    print("check boot partition")
+    check_boot_partition()
 
-  print("filesystem check on /dev/loop0p2 after chroot")
-  check_data_partition()
+    print("filesystem check on /dev/loop0p2 after chroot")
+    check_data_partition()
 
-  detach_loop_devices()
+    detach_loop_devices()
 
-  if compress:
-    compress_image(waggle_image)
+    if compress:
+      compress_image(waggle_image)
 
-  if upload:
-    upload_image(deployment, build_directory, waggle_image)
+    if upload:
+      upload_image(deployment, build_directory, waggle_image)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
