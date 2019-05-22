@@ -46,7 +46,7 @@ fi
 
 set -e
 # Opencv libs are now available as pre-built packages, so using the PPA
-if [ $(cat /proc/cpuinfo | grep Hardware | cut -d ":" -f 2) = "ODROID-XU4" ]; then
+if [ $(cat /proc/cpuinfo | grep Hardware | cut -d ":" -f 2) == "ODROID-XU4" ]; then
   add-apt-repository ppa:timsc/opencv-3.4 -y
 fi 
 
